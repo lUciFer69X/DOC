@@ -1,643 +1,210 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Search, 
-  Pill, 
-  GraduationCap, 
-  HeartPulse, 
-  Microscope, 
-  Calculator, 
-  Syringe, 
-  StickyNote, 
-  Save, 
-  ChevronLeft, 
-  AlertTriangle, 
-  Baby, 
-  Weight, 
-  Calendar,
-  X,
-  Stethoscope,
-  Activity,
-  Droplets,
-  Thermometer,
-  Info
+  Search, Pill, GraduationCap, HeartPulse, Microscope, Calculator, 
+  Syringe, StickyNote, Save, ChevronLeft, AlertTriangle, Baby, 
+  Weight, Calendar, X, Stethoscope, Activity, Droplets, Thermometer
 } from 'lucide-react';
 
-// --- قاعدة البيانات (The Brain) ---
-
+// --- البيانات (Database) ---
 const DRUG_DB = [
-  { name: "Panadol / Abimol", generic: "Paracetamol", use: "مسكن للألم وخافض للحرارة (آمن للحوامل)", dose: "قرص 500مجم / 6-8 ساعات", warn: "آمن جداً، ولكن لا تتجاوزي 4 جم يومياً.", type: "otc" },
-  { name: "Cataflam / Voltaren", generic: "Diclofenac Pot/Sod", use: "مسكن قوي ومضاد للالتهاب (عظام/أسنان)", dose: "50 مجم / 8-12 ساعة", warn: "ممنوع لمرضى قرحة المعدة، الكلى، والضغط العالي.", type: "nsaid" },
-  { name: "Brufen", generic: "Ibuprofen", use: "مسكن ومضاد التهاب وخافض حرارة للأطفال", dose: "400 مجم / 8 ساعات", warn: "يؤخذ بعد الأكل لتجنب ألم المعدة.", type: "nsaid" },
-  { name: "Augmentin / Hibiotic", generic: "Amoxicillin + Clavulanic", use: "مضاد حيوي واسع المجال (تنفسي/مسالك)", dose: "1 جم / 12 ساعة", warn: "قد يسبب إسهال. ممنوع لمن لديهم حساسية بننسلين.", type: "antibiotic" },
-  { name: "Zithromax / Zisrocin", generic: "Azithromycin", use: "مضاد حيوي (تنفسي علوي/كورونا)", dose: "500 مجم مرة واحدة يومياً (3 أيام)", warn: "يؤخذ قبل الأكل بساعة أو بعده بساعتين.", type: "antibiotic" },
-  { name: "Flagyl / Amrizole", generic: "Metronidazole", use: "مطهر معوي (للإسهال والأميبا)", dose: "500 مجم / 8 ساعات", warn: "يسبب طعم معدني بالفم وتلون البول.", type: "antibiotic" },
-  { name: "Antodine / Famotin", generic: "Famotidine", use: "للحموضة وارتجاع المريء", dose: "40 مجم مساءً", warn: "آمن نسبياً.", type: "git" },
-  { name: "Controloc / Zurcal", generic: "Pantoprazole", use: "لقرحة المعدة والارتجاع الشديد", dose: "40 مجم قبل الفطار بنصف ساعة", warn: "يستخدم لفترات طويلة بأمان.", type: "git" },
-  { name: "Visceralgine", generic: "Tiemonium", use: "للمغص والتقلصات (الدورة/القولون)", dose: "قرص 3 مرات عند اللزوم", warn: "قد يسبب جفاف بالفم.", type: "spasm" },
-  { name: "Neuril / Valinil", generic: "Diazepam", use: "مهدئ ومضاد للتشنجات (طوارئ)", dose: "وريد ببطء شديد جداً", warn: "⚠️ جدول مخدرات! قد يسبب توقف التنفس (Apnea).", type: "cns" },
-  { name: "Lasix", generic: "Furosemide", use: "مدر للبول (ضغط عالي/تورم)", dose: "40 مجم صباحاً", warn: "يقلل البوتاسيوم ويسبب كثرة التبول.", type: "cvs" },
-  { name: "Capoten", generic: "Captopril", use: "طوارئ الضغط المرتفع (تحت اللسان)", dose: "25 مجم عند اللزوم", warn: "يسبب كحة ناشفة.", type: "cvs" },
-  { name: "Adrenaline", generic: "Epinephrine", use: "إنعاش القلب / صدمة الحساسية", dose: "أمبول (طوارئ فقط)", warn: "يسبب تسارع شديد في القلب.", type: "emergency" },
-  { name: "Plavix", generic: "Clopidogrel", use: "سيولة الدم (للقلب والجلطات)", dose: "75 مجم يومياً", warn: "خطر النزيف، يوقف قبل العمليات.", type: "cvs" },
-  { name: "Concor", generic: "Bisoprolol", use: "تنظيم ضربات القلب والضغط", dose: "2.5 - 10 مجم صباحاً", warn: "⚠️ خطر جداً إيقافه فجأة.", type: "cvs" }
+  { name: "Panadol / Abimol", generic: "Paracetamol", use: "مسكن ومضاد للحرارة (آمن للحوامل)", dose: "500mg / 6-8hr", warn: "Max 4g/day", type: "otc" },
+  { name: "Cataflam / Voltaren", generic: "Diclofenac", use: "مسكن ومضاد التهاب (عظام/أسنان)", dose: "50mg / 8-12hr", warn: "ممنوع لمرضى القرحة والكلى", type: "nsaid" },
+  { name: "Brufen", generic: "Ibuprofen", use: "مسكن وخافض حرارة للأطفال", dose: "400mg / 8hr", warn: "بعد الأكل", type: "nsaid" },
+  { name: "Augmentin", generic: "Amox+Clav", use: "مضاد حيوي واسع المجال", dose: "1g / 12hr", warn: "حساسية البنسلين", type: "antibiotic" },
+  { name: "Zithromax", generic: "Azithromycin", use: "مضاد حيوي (تنفسي)", dose: "500mg daily (3 days)", warn: "قبل الأكل بساعة", type: "antibiotic" },
+  { name: "Flagyl", generic: "Metronidazole", use: "مطهر معوي (إسهال)", dose: "500mg / 8hr", warn: "طعم معدني بالفم", type: "antibiotic" },
+  { name: "Antodine", generic: "Famotidine", use: "للحموضة", dose: "40mg مساءً", warn: "آمن", type: "git" },
+  { name: "Controloc", generic: "Pantoprazole", use: "لقرحة المعدة", dose: "40mg قبل الفطار", warn: "آمن", type: "git" },
+  { name: "Visceralgine", generic: "Tiemonium", use: "للمغص والتقلصات", dose: "عند اللزوم", warn: "جفاف بالفم", type: "spasm" },
+  { name: "Lasix", generic: "Furosemide", use: "مدر للبول", dose: "40mg صباحاً", warn: "نقص بوتاسيوم", type: "cvs" },
+  { name: "Capoten", generic: "Captopril", use: "طوارئ الضغط (تحت اللسان)", dose: "25mg عند اللزوم", warn: "كحة ناشفة", type: "cvs" },
+  { name: "Adrenaline", generic: "Epinephrine", use: "إنعاش القلب / حساسية", dose: "Ampoule", warn: "تسارع قلب", type: "emergency" }
 ];
 
 const TERMINOLOGY = [
   { term: "-itis", meaning: "التهاب (Inflammation)" },
-  { term: "Hyper-", meaning: "عالي / زيادة (High)" },
+  { term: "Hyper-", meaning: "عالي (High)" },
   { term: "Hypo-", meaning: "منخفض (Low)" },
   { term: "Tachy-", meaning: "سريع (Fast)" },
-  { term: "Brady-", meaning: "بطيء (Slow)" },
-  { term: "Dys-", meaning: "صعوبة / خلل (Difficulty)" }
+  { term: "Brady-", meaning: "بطيء (Slow)" }
 ];
 
-const SUFFIXES = [
-  { term: "-lol", meaning: "Beta Blockers (للضغط والقلب)" },
-  { term: "-pril", meaning: "ACE Inhibitors (للضغط)" },
-  { term: "-sartan", meaning: "ARBs (للضغط)" },
-  { term: "-prazole", meaning: "Proton Pump Inhibitors (للمعدة)" },
-  { term: "-statin", meaning: "Cholesterol drugs (للدهون)" },
-  { term: "-cillin", meaning: "Penicillins (مضاد حيوي)" },
-  { term: "-floxacin", meaning: "Quinolones (مضاد حيوي)" }
-];
-
-// --- مكونات واجهة المستخدم (UI Components) ---
-
-const SectionTitle = ({ icon: Icon, title, color = "text-purple-600" }) => (
-  <div className="flex items-center gap-3 mb-6 px-2">
-    <div className={`p-2 rounded-lg bg-opacity-10 ${color.replace('text-', 'bg-')}`}>
-      <Icon size={24} className={color} />
-    </div>
-    <h2 className="text-xl font-bold text-slate-800">{title}</h2>
-  </div>
-);
-
+// --- المكونات (Components) ---
 const Card = ({ children, className = "", onClick }) => (
-  <div 
-    onClick={onClick}
-    className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-5 transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-[0.98]' : ''} ${className}`}
-  >
-    {children}
-  </div>
+  <div onClick={onClick} className={`bg-white rounded-2xl shadow-sm border border-slate-100 p-4 transition-all ${onClick ? 'active:scale-95' : ''} ${className}`}>{children}</div>
 );
 
 const Badge = ({ children, type }) => {
-  const colors = {
-    otc: "bg-green-100 text-green-700",
-    nsaid: "bg-orange-100 text-orange-700",
-    antibiotic: "bg-blue-100 text-blue-700",
-    emergency: "bg-red-100 text-red-700",
-    git: "bg-yellow-100 text-yellow-700",
-    cvs: "bg-pink-100 text-pink-700",
-    default: "bg-slate-100 text-slate-700"
-  };
-  return (
-    <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${colors[type] || colors.default}`}>
-      {children}
-    </span>
-  );
+  const colors = { otc: "bg-green-100 text-green-700", nsaid: "bg-orange-100 text-orange-700", antibiotic: "bg-blue-100 text-blue-700", emergency: "bg-red-100 text-red-700", git: "bg-yellow-100 text-yellow-700", cvs: "bg-pink-100 text-pink-700", default: "bg-slate-100 text-slate-700" };
+  return <span className={`px-2 py-1 rounded-md text-xs font-bold ${colors[type] || colors.default}`}>{children}</span>;
 };
 
-// --- التطبيق الرئيسي ---
-
+// --- التطبيق (Main App) ---
 export default function DrBiboApp() {
   const [activeTab, setActiveTab] = useState('home'); 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDrug, setSelectedDrug] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [showSaveMsg, setShowSaveMsg] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selDrug, setSelDrug] = useState(null);
+  const [notes, setNotes] = useState(localStorage.getItem('bibo_notes') || '');
+  const [msg, setMsg] = useState(false);
+  
+  // Calculators State
+  const [ped, setPed] = useState({ w: '', d: '', c: '', res: null });
+  const [bmi, setBmi] = useState({ w: '', h: '', res: null });
+  const [edd, setEdd] = useState({ lmp: '', res: null });
 
-  // States for Calculators
-  const [calcPed, setCalcPed] = useState({ w: '', d: '', c: '', res: null });
-  const [calcBMI, setCalcBMI] = useState({ w: '', h: '', res: null, status: '' });
-  const [calcEDD, setCalcEDD] = useState({ lmp: '', res: null });
+  const saveNotes = () => { localStorage.setItem('bibo_notes', notes); setMsg(true); setTimeout(() => setMsg(false), 2000); };
 
-  // تحميل الملاحظات عند الفتح
-  useEffect(() => {
-    const saved = localStorage.getItem('bibo_notes');
-    if (saved) setNotes(saved);
-  }, []);
+  const filteredDrugs = useMemo(() => DRUG_DB.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.use.includes(search)), [search]);
 
-  const handleSaveNotes = () => {
-    localStorage.setItem('bibo_notes', notes);
-    setShowSaveMsg(true);
-    setTimeout(() => setShowSaveMsg(false), 3000);
-  };
-
-  const filteredDrugs = useMemo(() => {
-    if (!searchQuery) return DRUG_DB;
-    const q = searchQuery.toLowerCase();
-    return DRUG_DB.filter(d => 
-      d.name.toLowerCase().includes(q) || 
-      d.generic.toLowerCase().includes(q) || 
-      d.use.includes(q)
-    );
-  }, [searchQuery]);
-
-  // التحويل التلقائي لتبويب الأدوية عند البحث
-  useEffect(() => {
-    if (searchQuery && activeTab !== 'drugs') {
-      setActiveTab('drugs');
-    }
-  }, [searchQuery]);
+  useEffect(() => { if (search && activeTab !== 'drugs') setActiveTab('drugs'); }, [search]);
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'drugs':
-        return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={Pill} title="دليل الأدوية (Pharmacology)" color="text-purple-600" />
-            {filteredDrugs.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
-                <Search size={48} className="mx-auto mb-4 opacity-20" />
-                <p>مفيش دواء بالاسم ده يا دكتورة 🤷‍♂️</p>
-              </div>
-            ) : (
-              filteredDrugs.map((drug, idx) => (
-                <Card key={idx} onClick={() => setSelectedDrug(drug)} className="border-r-4 border-r-purple-500">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold text-lg text-purple-900">{drug.name}</h3>
-                      <p className="text-sm text-slate-500 font-medium mb-2">{drug.generic}</p>
-                      <Badge type={drug.type || 'default'}>{drug.use.split(' ')[0]}</Badge>
-                    </div>
-                    <ChevronLeft className="text-slate-300" />
-                  </div>
-                  <div className="mt-2 text-xs text-slate-400 truncate max-w-[250px]">
-                    {drug.use}
-                  </div>
-                </Card>
-              ))
-            )}
+      case 'drugs': return (
+        <div className="space-y-3 pb-24">
+          <h2 className="text-xl font-bold text-purple-700 mb-4 flex gap-2"><Pill /> دليل الأدوية</h2>
+          {filteredDrugs.map((d, i) => (
+            <Card key={i} onClick={() => setSelDrug(d)} className="border-r-4 border-r-purple-500 flex justify-between items-center">
+              <div><h3 className="font-bold">{d.name}</h3><p className="text-sm text-slate-500">{d.generic}</p></div>
+              <Badge type={d.type}>{d.type}</Badge>
+            </Card>
+          ))}
+        </div>
+      );
+      case 'study': return (
+        <div className="space-y-4 pb-24">
+          <h2 className="text-xl font-bold text-blue-700 mb-4 flex gap-2"><GraduationCap /> المرجع الدراسي</h2>
+          <Card><h3 className="font-bold mb-2 text-blue-600">مصطلحات طبية</h3>
+            {TERMINOLOGY.map((t,i)=><div key={i} className="flex justify-between border-b p-2 last:border-0"><span>{t.meaning}</span><span className="font-bold text-blue-700">{t.term}</span></div>)}
+          </Card>
+          <Card><h3 className="font-bold mb-2 text-purple-600">اختصارات</h3><div className="grid grid-cols-2 gap-2 text-sm">
+            {['OD: مرة','BID: مرتين','TID: 3 مرات','IV: وريد','IM: عضل','PO: فم'].map((x,i)=><div key={i} className="bg-slate-50 p-1 rounded">{x}</div>)}
+          </div></Card>
+        </div>
+      );
+      case 'emergency': return (
+        <div className="space-y-4 pb-24">
+          <h2 className="text-xl font-bold text-red-700 mb-4 flex gap-2"><HeartPulse /> الطوارئ</h2>
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+            <h3 className="font-bold text-red-700 mb-2">CPR (توقف القلب)</h3>
+            <p className="text-sm">1. تأكدي من الأمان والوعي.</p>
+            <p className="text-sm">2. اطلبي Code Blue.</p>
+            <p className="text-sm font-bold mt-2">معدل الضغط: 100-120/دقيقة</p>
           </div>
-        );
-
-      case 'study':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={GraduationCap} title="المرجع الدراسي (Study)" color="text-blue-600" />
-            
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Activity size={18} className="text-blue-500" /> مصطلحات طبية
-              </h3>
-              <div className="overflow-hidden rounded-xl border border-slate-100">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="p-3 text-right">المصطلح</th>
-                      <th className="p-3 text-right">المعنى</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {TERMINOLOGY.map((t, i) => (
-                      <tr key={i}>
-                        <td className="p-3 font-semibold text-blue-700 dir-ltr text-left">{t.term}</td>
-                        <td className="p-3 text-slate-600">{t.meaning}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Pill size={18} className="text-purple-500" /> مفاتيح الأدوية
-              </h3>
-              <ul className="space-y-3">
-                {SUFFIXES.map((s, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm p-2 bg-slate-50 rounded-lg">
-                    <span className="font-bold text-purple-600 dir-ltr min-w-[80px] text-center">{s.term}</span>
-                    <span className="text-slate-600">{s.meaning}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-             <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <StickyNote size={18} className="text-slate-500" /> اختصارات الروشتة
-              </h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                 <div className="bg-slate-50 p-2 rounded"><b>OD:</b> مرة يومياً</div>
-                 <div className="bg-slate-50 p-2 rounded"><b>BID:</b> مرتين يومياً</div>
-                 <div className="bg-slate-50 p-2 rounded"><b>TID:</b> 3 مرات يومياً</div>
-                 <div className="bg-slate-50 p-2 rounded"><b>PO:</b> بالفم</div>
-                 <div className="bg-slate-50 p-2 rounded"><b>IV:</b> وريد</div>
-                 <div className="bg-slate-50 p-2 rounded"><b>IM:</b> عضل</div>
-              </div>
-            </Card>
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+            <h3 className="font-bold text-amber-700 mb-2">Anaphylaxis (حساسية)</h3>
+            <ul className="text-sm list-disc list-inside">
+              <li>Adrenaline (عضل)</li>
+              <li>Avil + Solu-Cortef (وريد)</li>
+            </ul>
           </div>
-        );
-
-      case 'emergency':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={HeartPulse} title="بروتوكولات الطوارئ" color="text-red-600" />
-            
-            <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-              <div className="bg-red-600 text-white p-4 font-bold flex items-center gap-2">
-                <HeartPulse size={20} /> توقف القلب (CPR)
+        </div>
+      );
+      case 'calcs': return (
+        <div className="space-y-4 pb-24">
+          <h2 className="text-xl font-bold text-indigo-700 mb-4 flex gap-2"><Calculator /> حاسبات</h2>
+          <Card>
+            <h3 className="font-bold mb-3 flex gap-2"><Baby size={18} /> جرعة أطفال</h3>
+            <div className="flex flex-col gap-2">
+              <input type="number" placeholder="الوزن (kg)" className="p-2 border rounded" onChange={e=>setPed({...ped,w:e.target.value})}/>
+              <div className="flex gap-2">
+                <input type="number" placeholder="الجرعة" className="p-2 border rounded w-1/2" onChange={e=>setPed({...ped,d:e.target.value})}/>
+                <input type="number" placeholder="التركيز" className="p-2 border rounded w-1/2" onChange={e=>setPed({...ped,c:e.target.value})}/>
               </div>
-              <div className="p-5 text-slate-700 space-y-2 text-sm">
-                <p>1. تأكدي من الأمان ثم الوعي.</p>
-                <p>2. اتصلي بالإسعاف / Code Blue.</p>
-                <p>3. تحسسي النبض السباتي لمدة 10 ثوان.</p>
-                <div className="font-bold text-red-600 bg-red-50 p-2 rounded border border-red-100 text-center">
-                  لا يوجد نبض؟ ابدأي الضغطات فوراً
-                </div>
-                <ul className="list-disc list-inside pr-2 text-slate-600 mt-2">
-                  <li>معدل: 100-120 ضغطة/دقيقة.</li>
-                  <li>عمق: 5-6 سم.</li>
-                  <li>نسبة 30 ضغطة : 2 نفس.</li>
-                </ul>
-              </div>
+              <button onClick={()=>{ const r=(ped.w*ped.d*5)/ped.c; setPed({...ped,res:r?r.toFixed(1):0})}} className="bg-indigo-600 text-white p-2 rounded font-bold">احسب</button>
+              {ped.res && <div className="text-center font-bold text-green-600 bg-green-50 p-2 rounded">{ped.res} cm</div>}
             </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
-              <div className="bg-amber-500 text-white p-4 font-bold flex items-center gap-2">
-                <AlertTriangle size={20} /> صدمة الحساسية (Anaphylaxis)
-              </div>
-              <div className="p-5">
-                <p className="text-sm text-slate-600 mb-4">
-                  <b>⚠️ الأعراض:</b> تورم شفايف، ضيق تنفس، طفح جلدي، هبوط ضغط.
-                </p>
-                <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                  <p className="text-amber-800 font-bold text-sm">العلاج الفوري:</p>
-                  <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1">
-                    <li><span className="font-bold">Adrenaline:</span> أمبول عضل فوراً (بدون تخفيف).</li>
-                    <li><span className="font-bold">Avil:</span> أمبول وريد/عضل.</li>
-                    <li><span className="font-bold">Solu-Cortef:</span> 100mg وريد ببطء.</li>
-                  </ol>
-                </div>
-              </div>
+          </Card>
+          <Card>
+            <h3 className="font-bold mb-3 flex gap-2"><Calendar size={18} /> موعد الولادة</h3>
+            <input type="date" className="w-full p-2 border rounded mb-2" onChange={e=>setEdd({...edd,lmp:e.target.value})}/>
+            <button onClick={()=>{const d=new Date(edd.lmp); d.setDate(d.getDate()+7); d.setMonth(d.getMonth()+9); setEdd({...edd,res:d.toLocaleDateString('ar-EG')})}} className="bg-amber-500 text-white w-full p-2 rounded font-bold">احسب</button>
+            {edd.res && <div className="text-center font-bold mt-2">{edd.res}</div>}
+          </Card>
+        </div>
+      );
+      case 'notes': return (
+        <div className="space-y-4 pb-24">
+          <h2 className="text-xl font-bold text-slate-700 mb-4 flex gap-2"><StickyNote /> نوت بوك</h2>
+          <textarea className="w-full h-60 p-4 border rounded-xl bg-yellow-50" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="اكتبي هنا..."></textarea>
+          <button onClick={saveNotes} className="w-full bg-emerald-600 text-white p-3 rounded-xl font-bold flex justify-center gap-2"><Save /> حفظ</button>
+          {msg && <div className="text-center text-green-600 font-bold">تم الحفظ! ✅</div>}
+        </div>
+      );
+      case 'labs': return (
+         <div className="space-y-4 pb-24">
+            <h2 className="text-xl font-bold text-teal-700 mb-4 flex gap-2"><Microscope /> التحاليل</h2>
+            <Card><h3 className="font-bold text-red-500">CBC</h3><div className="grid grid-cols-2 gap-2 text-sm mt-2">{[{k:'Hb',v:'12-16'},{k:'WBCs',v:'4-11k'},{k:'PLT',v:'150-450k'}].map((x,i)=><div key={i} className="bg-slate-50 p-1 text-center border rounded"><b>{x.k}</b>: {x.v}</div>)}</div></Card>
+            <Card><h3 className="font-bold text-orange-500">Kidney & Liver</h3><div className="grid grid-cols-2 gap-2 text-sm mt-2">{[{k:'Creat',v:'0.6-1.2'},{k:'Urea',v:'15-45'},{k:'ALT',v:'<40'}].map((x,i)=><div key={i} className="bg-slate-50 p-1 text-center border rounded"><b>{x.k}</b>: {x.v}</div>)}</div></Card>
+         </div>
+      );
+      case 'nursing': return (
+        <div className="space-y-4 pb-24">
+          <h2 className="text-xl font-bold text-sky-700 mb-4 flex gap-2"><Syringe /> تمريض</h2>
+          <Card><h3 className="font-bold mb-2">الكانيولا</h3><div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-white">{[{c:'bg-yellow-400',t:'24G'},{c:'bg-blue-500',t:'22G'},{c:'bg-pink-500',t:'20G'},{c:'bg-green-500',t:'18G'},{c:'bg-gray-400',t:'16G'}].map((x,i)=><div key={i} className={`${x.c} p-2 rounded shadow`}>{x.t}</div>)}</div></Card>
+          <Card><h3 className="font-bold mb-2">المحاليل</h3><div className="space-y-2 text-sm"><div className="bg-sky-50 p-2 rounded"><b>Saline 0.9%:</b> ضغط، عمليات</div><div className="bg-blue-50 p-2 rounded"><b>Glucose 5%:</b> جفاف</div></div></Card>
+        </div>
+      );
+      default: return (
+        <div className="grid grid-cols-2 gap-4 pb-24 animate-in zoom-in">
+          {[
+            {id:'drugs',l:'أدوية',i:Pill,c:'text-purple-600',b:'bg-purple-50'},
+            {id:'study',l:'دراسة',i:GraduationCap,c:'text-blue-600',b:'bg-blue-50'},
+            {id:'emergency',l:'طوارئ',i:HeartPulse,c:'text-red-600',b:'bg-red-50'},
+            {id:'labs',l:'تحاليل',i:Microscope,c:'text-teal-600',b:'bg-teal-50'},
+            {id:'calcs',l:'حاسبات',i:Calculator,c:'text-indigo-600',b:'bg-indigo-50'},
+            {id:'nursing',l:'تمريض',i:Syringe,c:'text-sky-600',b:'bg-sky-50'},
+            {id:'notes',l:'ملاحظاتي',i:StickyNote,c:'text-slate-600',b:'bg-slate-50',f:true},
+          ].map((x)=>(
+            <div key={x.id} onClick={()=>setActiveTab(x.id)} className={`bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 active:scale-95 transition ${x.f?'col-span-2':''}`}>
+              <div className={`p-3 rounded-full ${x.b}`}><x.i size={28} className={x.c}/></div><span className="font-bold text-slate-700">{x.l}</span>
             </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
-              <div className="bg-purple-600 text-white p-4 font-bold flex items-center gap-2">
-                 <Activity size={20} /> التشنجات (Seizures)
-              </div>
-              <div className="p-5 text-sm text-slate-700">
-                <p className="mb-2">1. الأمان (ابعدي أي حاجة حادة).</p>
-                <p className="mb-2">2. ضعي المريض على جنبه (Recovery Pos).</p>
-                <hr className="my-3"/>
-                <p><b>💊 العلاج:</b> Diazepam (Neuril) وريد ببطء شديد.</p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'labs':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={Microscope} title="القيم الطبيعية (Labs)" color="text-teal-600" />
-            
-            {[
-              { title: "صورة الدم (CBC)", icon: Activity, color: "text-red-500", data: [
-                { k: "WBCs", v: "4k - 11k" }, { k: "Hb (Male)", v: "13.5 - 17.5" }, { k: "Hb (Female)", v: "12.0 - 15.5" }, { k: "PLT", v: "150k - 450k" }
-              ]},
-              { title: "وظائف كلى وكبد", icon: Thermometer, color: "text-orange-500", data: [
-                { k: "Creatinine", v: "0.6 - 1.2" }, { k: "Urea", v: "15 - 45" }, { k: "ALT/AST", v: "Up to 40" }
-              ]},
-              { title: "الشوارد (Electrolytes)", icon: Activity, color: "text-yellow-500", data: [
-                { k: "Sodium (Na)", v: "135 - 145" }, { k: "Potassium (K)", v: "3.5 - 5.0" }, { k: "Calcium", v: "8.5 - 10.2" }
-              ]}
-            ].map((section, i) => (
-              <Card key={i}>
-                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <section.icon size={18} className={section.color} /> {section.title}
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {section.data.map((item, idx) => (
-                    <div key={idx} className="bg-slate-50 p-2 rounded-lg text-center border border-slate-100">
-                      <div className="text-xs text-slate-400 font-bold uppercase">{item.k}</div>
-                      <div className="font-mono text-slate-700 font-semibold dir-ltr">{item.v}</div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-        );
-
-      case 'calcs':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={Calculator} title="حاسبات طبية" color="text-indigo-600" />
-            
-            {/* Pediatric Dose */}
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Baby size={20} className="text-pink-500" /> جرعة شراب للأطفال
-              </h3>
-              <div className="space-y-3">
-                <input type="number" placeholder="وزن الطفل (كجم)" className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none" onChange={e => setCalcPed({...calcPed, w: e.target.value})} />
-                <div className="flex gap-3">
-                  <input type="number" placeholder="الجرعة (mg/kg)" className="w-1/2 p-3 bg-slate-50 rounded-xl border border-slate-200" onChange={e => setCalcPed({...calcPed, d: e.target.value})} />
-                  <input type="number" placeholder="التركيز (mg/5ml)" className="w-1/2 p-3 bg-slate-50 rounded-xl border border-slate-200" onChange={e => setCalcPed({...calcPed, c: e.target.value})} />
-                </div>
-                <button 
-                  onClick={() => {
-                    const res = (parseFloat(calcPed.w) * parseFloat(calcPed.d) * 5) / parseFloat(calcPed.c);
-                    setCalcPed({...calcPed, res: isNaN(res) ? null : res.toFixed(1)});
-                  }}
-                  className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
-                >
-                  احسب الجرعة
-                </button>
-                {calcPed.res && (
-                  <div className="bg-green-100 text-green-800 p-3 rounded-xl text-center font-bold border border-green-200">
-                    الجرعة: {calcPed.res} سم <span className="text-xs font-normal">كل مرة</span>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* BMI */}
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Weight size={20} className="text-teal-500" /> مؤشر كتلة الجسم (BMI)
-              </h3>
-              <div className="flex gap-3 mb-3">
-                <input type="number" placeholder="الوزن (كجم)" className="w-1/2 p-3 bg-slate-50 rounded-xl border border-slate-200" onChange={e => setCalcBMI({...calcBMI, w: e.target.value})} />
-                <input type="number" placeholder="الطول (سم)" className="w-1/2 p-3 bg-slate-50 rounded-xl border border-slate-200" onChange={e => setCalcBMI({...calcBMI, h: e.target.value})} />
-              </div>
-              <button 
-                onClick={() => {
-                  const hM = parseFloat(calcBMI.h) / 100;
-                  const bmi = parseFloat(calcBMI.w) / (hM * hM);
-                  let status = "";
-                  if(bmi < 18.5) status = "نحافة";
-                  else if(bmi < 25) status = "وزن مثالي";
-                  else if(bmi < 30) status = "وزن زائد";
-                  else status = "سمنة";
-                  setCalcBMI({...calcBMI, res: isNaN(bmi) ? null : bmi.toFixed(1), status});
-                }}
-                className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-200"
-              >
-                احسب BMI
-              </button>
-              {calcBMI.res && (
-                <div className="mt-3 bg-slate-800 text-white p-3 rounded-xl text-center">
-                  <div className="text-2xl font-bold">{calcBMI.res}</div>
-                  <div className="text-sm opacity-80">{calcBMI.status}</div>
-                </div>
-              )}
-            </Card>
-
-             {/* Pregnancy EDD */}
-             <Card>
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Calendar size={20} className="text-amber-500" /> موعد الولادة (EDD)
-              </h3>
-              <div className="space-y-3">
-                <label className="text-sm text-slate-500">أول يوم في آخر دورة:</label>
-                <input type="date" className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200" onChange={e => setCalcEDD({...calcEDD, lmp: e.target.value})} />
-                
-                <button 
-                  onClick={() => {
-                    const lmpDate = new Date(calcEDD.lmp);
-                    if(!isNaN(lmpDate.getTime())) {
-                        lmpDate.setDate(lmpDate.getDate() + 7);
-                        lmpDate.setMonth(lmpDate.getMonth() + 9);
-                        setCalcEDD({...calcEDD, res: lmpDate.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })});
-                    }
-                  }}
-                  className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition shadow-lg shadow-amber-200"
-                >
-                  احسب الموعد
-                </button>
-                {calcEDD.res && (
-                  <div className="bg-amber-100 text-amber-900 p-3 rounded-xl text-center font-bold border border-amber-200">
-                    {calcEDD.res}
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
-        );
-
-      case 'nursing':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={Syringe} title="مهارات التمريض" color="text-sky-600" />
-            
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-4 text-center">دليل ألوان الكانيولا</h3>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { c: "bg-yellow-400 text-black", t: "Yellow", g: "24G" },
-                  { c: "bg-blue-500 text-white", t: "Blue", g: "22G" },
-                  { c: "bg-pink-500 text-white", t: "Pink", g: "20G" },
-                  { c: "bg-green-500 text-white", t: "Green", g: "18G" },
-                  { c: "bg-gray-400 text-white", t: "Grey", g: "16G" },
-                  { c: "bg-orange-500 text-white", t: "Orange", g: "14G" },
-                ].map((can, i) => (
-                  <div key={i} className={`${can.c} p-3 rounded-xl text-center shadow-sm`}>
-                    <div className="font-bold text-sm">{can.t}</div>
-                    <div className="text-xs opacity-90">{can.g}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                <Droplets size={20} className="text-sky-500" /> أنواع المحاليل
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="p-3 bg-sky-50 rounded-lg border border-sky-100">
-                  <span className="font-bold text-sky-700 block mb-1">Isotonic (متعادل)</span>
-                  <span className="text-slate-600">N.Saline 0.9% / Ringer: لرفع الضغط، الجفاف، العمليات.</span>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <span className="font-bold text-blue-700 block mb-1">Hypotonic (مخفف)</span>
-                  <span className="text-slate-600">Glucose 5%: للجفاف الخلوي (Hypernatremia).</span>
-                </div>
-                <div className="p-3 bg-red-50 rounded-lg border border-red-100">
-                  <span className="font-bold text-red-700 block mb-1">Hypertonic (مركز)</span>
-                  <span className="text-slate-600">Mannitol: لسحب المياه من المخ (Edema).</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        );
-
-      case 'notes':
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <SectionTitle icon={StickyNote} title="نوت بوك الدكتورة" color="text-slate-600" />
-            
-            <div className="relative">
-              <textarea 
-                className="w-full h-64 p-4 rounded-2xl border-2 border-slate-200 focus:border-purple-500 focus:outline-none resize-none bg-yellow-50 text-slate-700 leading-relaxed shadow-inner"
-                placeholder="اكتبي ملاحظاتك هنا... (هتتحفظ تلقائي)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-            
-            <button 
-              onClick={handleSaveNotes}
-              className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2"
-            >
-              <Save size={20} /> حفظ الملاحظات
-            </button>
-            
-            {showSaveMsg && (
-              <div className="text-center text-emerald-600 font-bold animate-pulse bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                تم الحفظ بنجاح! ✅
-              </div>
-            )}
-          </div>
-        );
-
-      default: // Home
-        return (
-          <div className="grid grid-cols-2 gap-4 animate-in fade-in zoom-in duration-300 pb-20">
-            {[
-              { id: 'drugs', label: 'أدوية', icon: Pill, color: 'text-purple-600', bg: 'bg-purple-50' },
-              { id: 'study', label: 'دراسة', icon: GraduationCap, color: 'text-blue-600', bg: 'bg-blue-50' },
-              { id: 'emergency', label: 'طوارئ', icon: HeartPulse, color: 'text-red-600', bg: 'bg-red-50' },
-              { id: 'labs', label: 'تحاليل', icon: Microscope, color: 'text-teal-600', bg: 'bg-teal-50' },
-              { id: 'calcs', label: 'حاسبات', icon: Calculator, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { id: 'nursing', label: 'تمريض', icon: Syringe, color: 'text-sky-600', bg: 'bg-sky-50' },
-              { id: 'notes', label: 'ملاحظاتي', icon: StickyNote, color: 'text-slate-600', bg: 'bg-slate-50' },
-            ].map((cat) => (
-              <div 
-                key={cat.id}
-                onClick={() => setActiveTab(cat.id)}
-                className={`flex flex-col items-center justify-center p-6 rounded-3xl shadow-sm border border-slate-100 cursor-pointer transition-all hover:scale-105 active:scale-95 bg-white ${cat.id === 'notes' ? 'col-span-2' : ''}`}
-              >
-                <div className={`p-4 rounded-full mb-3 ${cat.bg}`}>
-                  <cat.icon size={32} className={cat.color} />
-                </div>
-                <span className="text-base font-bold text-slate-700">{cat.label}</span>
-              </div>
-            ))}
-          </div>
-        );
+          ))}
+        </div>
+      );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans dir-rtl text-slate-800 pb-24" dir="rtl">
-      {/* الهيدر الرئيسي */}
-      <div className="relative bg-gradient-to-br from-purple-700 to-indigo-800 text-white rounded-b-[2.5rem] shadow-xl overflow-hidden pb-10">
-        <div className="relative px-6 pt-12 pb-8 text-center">
-          <h1 className="text-3xl font-extrabold mb-2 tracking-tight">Dr. Bibo Universe ♾️</h1>
-          <p className="text-purple-200 text-sm font-medium">كل سنة وانتي طيبة يا دكتورة المستقبل ❤️</p>
+    <div className="min-h-screen bg-slate-50 font-sans dir-rtl pb-20" dir="rtl">
+      <div className="bg-gradient-to-br from-purple-700 to-indigo-800 text-white rounded-b-3xl p-6 pt-12 text-center shadow-lg">
+        <h1 className="text-2xl font-bold">Dr. Bibo Universe ♾️</h1>
+        <p className="text-purple-200 text-sm">أشطر دكتورة في الدنيا ❤️</p>
+      </div>
+      
+      <div className="px-5 -mt-6 relative z-10">
+        <div className="bg-white rounded-full shadow-lg flex items-center px-4 py-3">
+          <Search className="text-slate-400 ml-2" size={20} />
+          <input type="text" placeholder="بحث..." className="flex-1 outline-none text-slate-700" value={search} onChange={e=>setSearch(e.target.value)} />
+          {search && <X size={18} className="text-slate-400" onClick={()=>setSearch('')} />}
         </div>
       </div>
 
-      {/* شريط البحث العائم */}
-      <div className="px-6 -mt-8 relative z-10 mb-6">
-        <div className="relative shadow-xl rounded-full bg-white">
-          <input 
-            type="text" 
-            placeholder="🔍 ابحثي عن دواء، عرض، أو تحليل..." 
-            className="w-full py-4 pr-14 pl-6 rounded-full border-none focus:ring-4 focus:ring-purple-200 outline-none text-slate-700 font-medium transition-all placeholder-slate-400"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute top-1/2 right-4 -translate-y-1/2 text-purple-600">
-            {searchQuery ? (
-              <X className="cursor-pointer hover:bg-slate-100 rounded-full p-1" onClick={() => setSearchQuery('')} />
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      {/* منطقة المحتوى الرئيسية */}
-      <div className="px-4 max-w-2xl mx-auto">
-        {activeTab !== 'home' && (
-          <button 
-            onClick={() => setActiveTab('home')}
-            className="mb-4 text-sm text-slate-500 flex items-center gap-1 hover:text-purple-600 transition-colors font-medium"
-          >
-            <ChevronLeft size={16} /> العودة للرئيسية
-          </button>
-        )}
+      <div className="p-5">
+        {activeTab !== 'home' && <button onClick={()=>setActiveTab('home')} className="mb-4 flex items-center text-sm font-bold text-slate-500"><ChevronLeft size={16}/> القائمة الرئيسية</button>}
         {renderContent()}
       </div>
 
-      {/* شريط التنقل السفلي */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-5px_30px_rgba(0,0,0,0.08)] rounded-t-3xl z-50 px-4 py-2">
-        <div className="flex justify-between items-center max-w-md mx-auto relative">
-          {[
-            { id: 'drugs', icon: Pill, label: 'أدوية' },
-            { id: 'nursing', icon: Syringe, label: 'تمريض' },
-            { id: 'home', icon: Stethoscope, label: 'الرئيسية', main: true },
-            { id: 'calcs', icon: Calculator, label: 'حاسبة' },
-            { id: 'emergency', icon: HeartPulse, label: 'طوارئ' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`flex flex-col items-center justify-center transition-all duration-300 ${
-                activeTab === item.id ? 'text-purple-600' : 'text-slate-400 hover:text-slate-600'
-              } ${item.main ? 'relative -top-8' : 'w-16'}`}
-            >
-              <div className={`${item.main ? 'bg-purple-600 text-white p-4 rounded-full shadow-lg shadow-purple-300 ring-4 ring-white' : ''} ${activeTab === item.id && !item.main ? '-translate-y-1' : ''} transition-transform`}>
-                 <item.icon size={item.main ? 28 : 24} strokeWidth={2.5} />
-              </div>
-              {!item.main && <span className={`text-[10px] font-bold mt-1 ${activeTab === item.id ? 'opacity-100' : 'opacity-0'}`}>{item.label}</span>}
-            </button>
-          ))}
-        </div>
+      <div className="fixed bottom-0 w-full bg-white border-t border-slate-100 p-2 flex justify-around shadow-2xl z-50 rounded-t-2xl">
+        {[{id:'drugs',i:Pill,l:'أدوية'},{id:'nursing',i:Syringe,l:'تمريض'},{id:'home',i:Stethoscope,l:'الرئيسية',m:true},{id:'calcs',i:Calculator,l:'حاسبة'},{id:'emergency',i:HeartPulse,l:'طوارئ'}].map(x=>
+          <button key={x.id} onClick={()=>{setActiveTab(x.id);window.scrollTo(0,0)}} className={`flex flex-col items-center ${x.m?'-mt-8':''} ${activeTab===x.id?'text-purple-600':'text-slate-400'}`}>
+            <div className={`${x.m?'bg-purple-600 text-white p-3 rounded-full shadow-lg border-4 border-slate-50':''}`}><x.i size={x.m?28:24}/></div>
+            {!x.m && <span className="text-[10px] font-bold">{x.l}</span>}
+          </button>
+        )}
       </div>
 
-      {/* نافذة تفاصيل الدواء (Modal) */}
-      {selectedDrug && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white relative">
-              <button 
-                onClick={() => setSelectedDrug(null)}
-                className="absolute top-4 left-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition text-white"
-              >
-                <X size={20} />
-              </button>
-              <h2 className="text-2xl font-bold mb-1">{selectedDrug.name}</h2>
-              <p className="opacity-90 font-mono text-sm">{selectedDrug.generic}</p>
+      {selDrug && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden animate-in zoom-in">
+            <div className="bg-purple-600 text-white p-4 flex justify-between items-start">
+              <div><h2 className="text-xl font-bold">{selDrug.name}</h2><p className="text-sm opacity-80">{selDrug.generic}</p></div>
+              <button onClick={()=>setSelDrug(null)} className="bg-white/20 p-1 rounded-full"><X size={20}/></button>
             </div>
-            
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">الاستخدام</label>
-                <div className="text-slate-800 font-semibold text-lg leading-relaxed">
-                  {selectedDrug.use}
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">الجرعة المعتادة</label>
-                <div className="inline-block bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl font-bold border border-indigo-100">
-                  {selectedDrug.dose}
-                </div>
-              </div>
-
-              <div className="bg-amber-50 border-r-4 border-amber-500 p-4 rounded-r-lg">
-                <div className="flex gap-2 text-amber-800 font-bold mb-1">
-                  <AlertTriangle size={18} /> تحذير
-                </div>
-                <p className="text-sm text-amber-700 leading-relaxed">
-                  {selectedDrug.warn}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-              <button 
-                onClick={() => setSelectedDrug(null)}
-                className="w-full py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition"
-              >
-                إغلاق
-              </button>
+            <div className="p-5 space-y-4">
+              <div><label className="text-xs font-bold text-slate-400">الاستخدام</label><p className="font-bold text-lg">{selDrug.use}</p></div>
+              <div><label className="text-xs font-bold text-slate-400">الجرعة</label><p className="bg-indigo-50 text-indigo-700 p-2 rounded font-bold inline-block">{selDrug.dose}</p></div>
+              <div className="bg-amber-50 p-3 rounded border-r-4 border-amber-500"><div className="flex gap-2 text-amber-800 font-bold text-sm"><AlertTriangle size={16}/> تحذير</div><p className="text-sm text-amber-700">{selDrug.warn}</p></div>
             </div>
           </div>
         </div>
